@@ -44,7 +44,8 @@
           h2.name(v-html="currentSong.name")
           p.desc(v-html="currentSong.singer")
         .control
-          i(:class="miniIcon" @click.stop="togglePlaying")
+          ProgressCircle(:radius="radius", :percent="percent")
+            i.icon-mini(:class="miniIcon" @click.stop="togglePlaying")
         .control
           i.icon-playlist
     audio(:src="currentSong.url" ref="audio" @canplay="ready" @error="error" @timeupdate="updateTime")
@@ -55,6 +56,7 @@
   import animations from 'create-keyframe-animation'
   import { prefixStyle } from 'common/js/dom'
   import ProgressBar from 'base/progress-bar/progress-bar'
+  import ProgressCircle from 'base/progress-circle/progress-circle'
 
   const transform = prefixStyle('transform')
   const transitionDuration = prefixStyle('transitionDuration')
@@ -63,7 +65,8 @@
 
   export default {
     components: {
-      ProgressBar
+      ProgressBar,
+      ProgressCircle
     },
     data () {
       return {
@@ -71,6 +74,7 @@
         songReady: false,
         // 当前播放时间
         currentTime: 0,
+        radius: 32
       }
     },
     methods: {
