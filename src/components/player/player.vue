@@ -23,6 +23,7 @@
           .progress-wrapper
             span.time.time-l {{currentTime | fmtTime}}
             .progress-bar-wrapper
+              ProgressBar(:percent="percent" @percentChange="onPercentChange")
             span.time.time-r {{currentSong.duration | fmtTime}}
           .operators
             .icon.i-left
@@ -53,6 +54,7 @@
   import { mapGetters, mapMutations } from 'vuex'
   import animations from 'create-keyframe-animation'
   import { prefixStyle } from 'common/js/dom'
+  import ProgressBar from 'base/progress-bar/progress-bar'
 
   const transform = prefixStyle('transform')
   const transitionDuration = prefixStyle('transitionDuration')
@@ -60,12 +62,15 @@
   const timeExp = /\[(\d{2}):(\d{2}):(\d{2})]/g
 
   export default {
+    components: {
+      ProgressBar
+    },
     data () {
       return {
         // 是否可以切歌
         songReady: false,
         // 当前播放时间
-        currentTime: 0
+        currentTime: 0,
       }
     },
     methods: {
@@ -170,6 +175,12 @@
       updateTime(e) {
         this.currentTime = e.target.currentTime
       },
+      onPercentChange(percent) {
+        this.$refs.audio.currentTime = this.currentSong.duration * percent
+        if (!this.playing) {
+          this.togglePlaying()
+        }
+      },
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN',
         setPlayingState: 'SET_PLAYING_STATE',
@@ -188,6 +199,9 @@
       },
       disableCls() {
         return this.songReady ? '' : 'disable'
+      },
+      percent() {
+        return this.currentTime / this.currentSong.duration
       },
       ...mapGetters([
         'fullScreen',
@@ -373,6 +387,7 @@
             font-size: $font-size-small
             flex: 0 0 auto
             line-height: 30px
+            width: 35px
             &.time-l
               text-align: left
             &.time-r
