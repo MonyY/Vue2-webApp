@@ -1,4 +1,4 @@
-import {commonParams} from './config'
+import { commonParams } from './config'
 import axios from 'axios'
 
 export function getLyric(mid) {
@@ -9,7 +9,7 @@ export function getLyric(mid) {
     platform: 'yqq',
     hostUin: 0,
     needNewCode: 0,
-    categoryId: 10000000,
+    g_tk: 67232076,
     pcachetime: +new Date(),
     format: 'json'
   })
