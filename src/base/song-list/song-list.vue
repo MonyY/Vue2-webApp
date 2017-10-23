@@ -2,6 +2,8 @@
   .song-list
     ul
       li.item(v-for="(song,index) in songs" @click="selectItem(song,index)")
+        .rank(v-show="rank")
+          span(:class="getRankCls(index)" v-text="getRankText(index)")
         .content
           h2.name {{ song.name }}
           p.desc {{ song | getDesc }}
@@ -13,11 +15,27 @@
       songs: {
         type: Array,
         default: []
+      },
+      rank: {
+        type: Boolean,
+        default: false
       }
     },
     methods: {
       selectItem(item, index) {
         this.$emit('select', item, index)
+      },
+      getRankCls(index) {
+        if (index <= 2) {
+          return `icon icon${index}`
+        } else {
+          return 'text'
+        }
+      },
+      getRankText(index) {
+        if (index > 2) {
+          return index + 1
+        }
       }
     },
     filters: {

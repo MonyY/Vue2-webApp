@@ -11,9 +11,9 @@
               a(:href="item.linkUrl")
                 img(:src="item.picUrl" @load="imgLoading")
         .recommend-list
-          h1.list-title 热门歌曲推荐
+          h1.list-title 热门歌单推荐
           ul
-            li.item(v-for="item in discList")
+            li.item(v-for="item in discList" @click="selectItem(item)")
               .icon
                 img(v-lazy="item.imgurl" width="60" height="60")
               .text
@@ -21,6 +21,7 @@
                 p.desc(v-html="item.dissname")
       .loading-container(v-show="!discList.length")
         Loading(:title="'飞速加载中...'")
+    router-view
 </template>
 
 <script>
@@ -29,6 +30,7 @@
   import { ERR_OK } from 'api/config'
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
+  import { mapMutations } from 'vuex'
   export default {
     components: {
       Slider, Scroll, Loading
@@ -59,6 +61,7 @@
           }
         })
       },
+
       // 一旦有图片加载成功，重新计算滚动高度
       imgLoading() {
         if (!this.load) {
@@ -68,7 +71,18 @@
             this.$refs.scroll.refresh()
           }, 20);
         }
-      }
+      },
+
+      selectItem(item) {
+        this.$router.push({
+          path: `/recommend/${item.dissid}`
+        })
+        this.setDisc(item)
+      },
+
+      ...mapMutations({
+        setDisc: 'SET_DISC'
+      })
     }
   }
 </script>

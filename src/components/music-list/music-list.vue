@@ -4,15 +4,15 @@
       i.icon-back
     h1.title(v-html="title")
     .bg-image(:style="bgStyle" ref="bgImage")
-      .play-wrapper(v-show="songs.length" ref="playBtn")
-        .play
+      .play-wrapper
+        .play(v-show="songs.length" ref="playBtn" @click="random")
           i.icon-play
           span.text 随机播放全部
       .filter(ref="filter")
     .bg-layer(ref="layer")
     Scroll.list(:data="songs" ref="list", :probeType="probeType", :listenScroll="listenScroll" @scroll="scroll")
       .song-list-wrapper
-        SongList(:songs="songs" @select="selectItem")
+        SongList(:songs="songs", :rank="rank" @select="selectItem")
       .loading-container(v-show="!songs.length")
         Loading
 </template>
@@ -23,12 +23,14 @@
   import Loading from 'base/loading/loading'
   import { prefixStyle } from 'common/js/dom'
   import { mapActions } from 'vuex'
+  import { playlistMixin } from 'common/js/mixin'
 
   const RESERVED_HEIGHT = 40
   const transform = prefixStyle('transform')
   const backdrop = prefixStyle('backdrop-filter')
 
   export default {
+    mixins: [playlistMixin],
     components: {
       Scroll, SongList, Loading
     },
@@ -70,6 +72,11 @@
       this.$refs.list.$el.style.top = `${this.imageHeight}px`
     },
     methods: {
+      handlePlaylist(playList) {
+        const bottom = playList.length > 0 ? '60px' : ''
+        this.$refs.list.$el.style.bottom = bottom
+        this.$refs.list.refresh()
+      },
       scroll(pos) {
         this.scrollY = pos.y
       },
@@ -79,8 +86,14 @@
       selectItem(item, index) {
         this.selectPlay({ list: this.songs, index })
       },
+      random() {
+        this.randomPlay({
+          list: this.songs
+        })
+      },
       ...mapActions([
-          'selectPlay'
+        'selectPlay',
+        'randomPlay'
       ])
     },
     watch: {
