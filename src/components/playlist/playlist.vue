@@ -5,7 +5,7 @@
         .list-header
           h1.title
             i.icon(:class="iconMode" @click="changeMode")
-            span.text{{modeText}}
+            span.text {{modeText}}
             span.clear(@click="showConfirm")
               i.icon-clear
         Scroll.list-content(:data="sequenceList" ref="scroll", :refreshDelay="refreshDelay")
