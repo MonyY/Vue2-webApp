@@ -48,7 +48,7 @@
             .icon.i-right(:class="disableCls")
               i.icon-next(@click="next")
             .icon.i-right
-              i.icon.icon-not-favorite
+              i.icon(:class="getFavoriteIcon(currentSong)" @click="toggleFavorite(currentSong)")
     transition(name="mini")
       .mini-player(v-show="!fullScreen" @click="open")
         .icon
@@ -59,22 +59,23 @@
         .control
           ProgressCircle(:radius="radius", :percent="percent")
             i.icon-mini(:class="miniIcon" @click.stop="togglePlaying")
-        .control
+        .control(@click.stop="showPlaylist")
           i.icon-playlist
-    audio(:src="currentSong.url" ref="audio" @canplay="ready" @error="error" @timeupdate="updateTime" @ended="end")
+    PlayList(ref="playlist")
+    audio(:src="currentSong.url" ref="audio" @play="ready" @error="error" @timeupdate="updateTime" @ended="end")
 </template>
 
 <script>
-  import { mapGetters, mapMutations } from 'vuex'
+  import { mapGetters, mapMutations, mapActions } from 'vuex'
   import animations from 'create-keyframe-animation'
   import { prefixStyle } from 'common/js/dom'
   import ProgressBar from 'base/progress-bar/progress-bar'
   import ProgressCircle from 'base/progress-circle/progress-circle'
   import { playMode } from 'common/js/config'
-  import { shuffle } from 'common/js/until'
   import Lyric from 'lyric-parser'
   import Scroll from 'base/scroll/scroll'
   import { playerMixin } from 'common/js/mixin'
+  import PlayList from 'components/playlist/playlist'
 
   const transform = prefixStyle('transform')
   const transitionDuration = prefixStyle('transitionDuration')
@@ -86,7 +87,8 @@
     components: {
       ProgressBar,
       ProgressCircle,
-      Scroll
+      Scroll,
+      PlayList
     },
     created() {
       this.touch = {}
@@ -106,6 +108,9 @@
       }
     },
     methods: {
+      showPlaylist() {
+        this.$refs.playlist.show()
+      },
       back() {
         this.setFullScreen(false)
       },
@@ -178,6 +183,7 @@
       },
       ready() {
         this.songReady = true
+        this.savePlayHistory(this.currentSong)
       },
       error() {
         this.songReady = true
@@ -209,7 +215,7 @@
           if (index === this.playList.length) {
             index = 0
           }
-          this.setcurrentIndex(index)
+          this.setCurrentIndex(index)
           if (!this.playing) {
             this.togglePlaying()
           }
@@ -227,7 +233,7 @@
           if (index === -1) {
             index = this.playList.length - 1
           }
-          this.setcurrentIndex(index)
+          this.setCurrentIndex(index)
           if (!this.playing) {
             this.togglePlaying()
           }
@@ -245,29 +251,12 @@
         if (this.currentLyric) {
           this.currentLyric.seek(currentTime * 1000)
         }
-      },
-      changeMode() {
-        const mode = (this.mode + 1) % 3
-        this.setPlayMode(mode)
-        // 随机播放模式
-        let list = null
-        if (mode === playMode.random) {
-          list = shuffle(this.sequenceList)
-        }else{
-          // 顺序播放
-          list = this.sequenceList
-        }
-        this.resetCurrentIndex(list)
-        this.setPlayList(list)
-      },
-      resetCurrentIndex(list) {
-        let index = list.findIndex((item) => {
-          return item.id === this.currentSong.id
-        })
-        this.setcurrentIndex(index)
-      },
+      },  
       getLyric() {
         this.currentSong.getLyric().then((lyric) => {
+          if (this.currentSong.lyric !== lyric) {
+            return
+          }
           this.currentLyric = new Lyric(lyric, this.handleLyric)
           if(this.playing) {
             this.currentLyric.play()
@@ -353,17 +342,13 @@
         this.touch.initiated = false
       },
       ...mapMutations({
-        setFullScreen: 'SET_FULL_SCREEN',
-        setPlayingState: 'SET_PLAYING_STATE',
-        setcurrentIndex: 'SET_CURRENT_INDEX',
-        setPlayMode: 'SET_PLAY_MODE',
-        setPlayList: 'SET_PLAYLIST',
-      })
+        setFullScreen: 'SET_FULL_SCREEN'
+      }),
+      ...mapActions([
+        'savePlayHistory'
+      ])
     },
     computed: {
-      iconMode() {
-        return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
-      },
       playIcon() {
          return this.playing ? 'icon-pause' : 'icon-play'
       },
@@ -381,20 +366,13 @@
       },
       ...mapGetters([
         'fullScreen',
-        'playList',
-        'currentSong',
         'playing',
-        'currentIndex',
-        'mode',
-        'sequenceList'
+        'currentIndex'
       ])
     },
     watch: {
       currentSong(newSong, oldSong) {
-        if (!newSong.id) {
-          return
-        }
-        if (newSong.id === oldSong.id) {
+        if (!newSong.id || newSong.id === oldSong.id) {
           return
         }
         this.songReady = false
