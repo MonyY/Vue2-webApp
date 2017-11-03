@@ -56,7 +56,7 @@
             ret.push(createSong(musicData))
           }
         })
-        return ret.splice(0, 100)
+        return ret.slice(0, 100)
       }
     }
   }
